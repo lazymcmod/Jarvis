@@ -6,6 +6,12 @@ import datetime
 from plyer import notification
 import pyautogui
 import wikipedia
+import requests
+import json
+
+API_URL = "https://openrouter.ai/api/v1/chat/completions"
+API_KEY = "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"
+
 
 
 
@@ -36,6 +42,42 @@ def command():
             print("Please try again......")
 
     return content 
+
+def ask_ai(question):
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    payload = {
+        "model": "x-ai/grok-4.1-fast:free",
+        "messages": [
+            {"role": "user", "content": question}
+        ],
+        "reasoning": {"enabled": True}
+    }
+
+    response = requests.post(API_URL, headers=headers, json=payload)
+
+    try:
+        data = response.json()
+    except:
+        print("AI Error:", response.text)
+        return "Sorry, I could not understand the AI response."
+
+    if "choices" not in data:
+        print("API ERROR:", data)
+        return "AI returned an error."
+
+    answer = data["choices"][0]["message"]["content"]
+
+    # -----------------------
+    # PRINT ANSWER IN TERMINAL
+    # -----------------------
+    print("\nAI Response:", answer, "\n")
+
+    return answer
+
 
 def main_process():    
     while True:
@@ -110,20 +152,11 @@ def main_process():
             request = request.replace("jarvis ", "")
             request = request.replace("search google ", "")
             webbrowser.open("https://www.google.com/search?q=" + request)
-        
-                
-
-
-
-
-                
-            
-
-
-           
-            
-
-
-
+        elif "jarvis" in request or "ai" in request:
+            request_clean = request.replace("jarvis", "").replace("ai", "")
+            answer = ask_ai(request_clean)
+            speak(answer)
+       
+    
 
 main_process()    
